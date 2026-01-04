@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iLove Math: Battle Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ff88;
+            --secondary: #00cc66;
+            --accent: #e94560;
+            --bg-dark: #16213e;
+            --panel-bg: #1a1a2e;
+            --glass: rgba(26, 26, 46, 0.9);
+            --glow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        /* Container & Layout */
+        #gameWrapper {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Canvas Area */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            background: #0f1219;
+            border-bottom: 2px solid #333;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+
+        /* Controls Area */
+        #controls {
+            padding: 20px;
+            background: linear-gradient(to bottom, #1a1a2e, #131322);
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .control-panel {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* Inputs & Buttons */
+        .input-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            font-size: 1.2rem;
+            min-width: 40px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--accent) 0%, #ff6b9d 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+            white-space: nowrap;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn-main:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ddd;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Direction Toggles */
+        .mode-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            transition: 0.3s;
+            color: #aaa;
+            border: 1px solid transparent;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Sub-Direction Buttons (Left/Right/Up/Down) */
+        .dir-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+        
+        .dir-btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        
+        .dir-btn.active {
+            background: #e94560;
+            color: white;
+            border-color: #e94560;
+        }
+
+        /* Stats & Presets */
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            font-size: 1.2rem;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .presets {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .preset-chip {
+            background: rgba(83, 52, 131, 0.4);
+            border: 1px solid rgba(83, 52, 131, 0.6);
+            color: #c9a9ff;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .preset-chip:hover {
+            background: rgba(83, 52, 131, 0.8);
+            color: #fff;
+        }
+
+        /* Overlays (Start Screen / Game Over) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(9, 10, 15, 0.95);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(to right, #00ff88, #00cc66);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        h2 { margin-bottom: 20px; color: #ccc; }
+
+        .player-select-btn {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: 0.3s;
+        }
+
+        .player-select-btn:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Scoreboard Strip */
+        #scoreboard {
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            padding: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .score-item strong { color: #FFD700; font-family: 'Orbitron'; }
+
+        /* Current Player Indicator */
+        #turnIndicator {
+            text-align: center;
+            padding: 10px;
+            background: rgba(233, 69, 96, 0.1);
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+            transition: 0.3s;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .error-msg {
+            color: #ff4757;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            height: 20px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="overlay">
+        <div class="modal">
+            <h1>iLOVE MATH</h1>
+            <h3 style="color: var(--accent); margin-bottom: 20px;">BATTLE ARENA</h3>
+            <p style="color: #888; margin-bottom: 30px; line-height: 1.6;">
+                กำจัดคู่ต่อสู้ด้วยพลังแห่งคณิตศาสตร์! <br>
+                <strong>"สร้างกราฟที่พุ่งออกจากตัวคุณ"</strong><br>
+                เลือกทิศทาง และใส่สมการเพื่อยิงกระสุน
+            </p>
+            
+            <h2>จำนวนผู้เล่น</h2>
+            <div>
+                <button class="player-select-btn" onclick="setupGame(2)">2 Players</button>
+                <button class="player-select-btn" onclick="setupGame(3)">3 Players</button>
+                <button class="player-select-btn" onclick="setupGame(4)">4 Players</button>
+            </div>
+            
+            <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <p style="font-size: 0.9rem; color: #666;">สมาชิกในกลุ่ม</p>
+                <div style="font-size: 0.85rem; color: #888; margin-top: 5px;">
+                    6620310001 กามารูดิง อิงดิง | 6620310153 สักริน สาระอาหลี | 6620310155 อริสมันท์ อิสลาม
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Name Input Screen -->
+    <div id="nameScreen" class="overlay" style="display: none;">
+        <div class="modal">
+            <h2 style="color: var(--primary);">ตั้งชื่อผู้เล่น</h2>
+            <div id="nameInputs" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <!-- Inputs generated by JS -->
+            </div>
+            <button class="btn-main" onclick="startGame()">START GAME 🚀</button>
+            <button class="btn-secondary" onclick="backToStart()" style="margin-left: 10px;">BACK</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="overlay" style="display: none;">
+        <div class="modal">
+            <h1 id="winnerTitle" style="font-size: 2.5rem;">VICTORY!</h1>
+            <p id="winnerSubtitle" style="font-size: 1.2rem; color: #fff; margin-bottom: 20px;"></p>
+            
+            <div id="roundStats" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <!-- Stats injected here -->
+            </div>
+
+            <button class="btn-main" onclick="resetRound()">เล่นอีกครั้ง (Next Round)</button>
+            <button class="btn-secondary" onclick="fullReset()" style="margin-left: 10px;">เมนูหลัก</button>
+        </div>
+    </div>
+
+    <!-- Main Game Interface -->
+    <div id="gameWrapper" style="display: none;">
+        <div id="scoreboard">Waiting for start...</div>
+        <div id="turnIndicator">Current Turn: Player 1</div>
+        
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div id="controls">
+            <div class="control-panel">
+                <!-- Left: Input Area -->
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.9rem; color: #aaa;">Mode Selector</span>
+                    </div>
+                    
+                    <!-- Axis Toggle -->
+                    <div class="mode-toggle">
+                        <div class="mode-btn active" id="mode-h" onclick="setMode('horizontal')">↔ แนวนอน (y = f(x))</div>
+                        <div class="mode-btn" id="mode-v" onclick="setMode('vertical')">↕ แนวตั้ง (x = f(y))</div>
+                    </div>
+                    
+                    <!-- Direction Toggle -->
+                    <div class="dir-controls">
+                        <span style="font-size: 0.8rem; color: #aaa;">ทิศทางยิง:</span>
+                        <button class="dir-btn active" id="dir-plus" onclick="setDirection(1)">ขวา (+)</button>
+                        <button class="dir-btn" id="dir-minus" onclick="setDirection(-1)">ซ้าย (-)</button>
+                    </div>
+
+                    <div class="input-row">
+                        <label id="funcLabel">y =</label>
+                        <input type="text" id="funcInput" placeholder="-0.1*x^2 + 2*x" autocomplete="off">
+                        <button class="btn-main" id="fireBtn" onclick="fire()">FIRE</button>
+                    </div>
+                    <span id="errorMsg" class="error-msg"></span>
+
+                    <!-- Quick Presets -->
+                    <div class="presets">
+                        <span style="color:#666; font-size: 0.8rem; align-self: center;">สูตรลัด:</span>
+                        <div class="preset-chip" onclick="usePreset('parabola')">Parabola</div>
+                        <div class="preset-chip" onclick="usePreset('sine')">Sine Wave</div>
+                        <div class="preset-chip" onclick="usePreset('line')">Straight Line</div>
+                    </div>
+                </div>
+
+                <!-- Right: Info Area -->
+                <div class="info-panel">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value" id="stat-players">0</span>
+                            <span class="stat-label">Alive</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="stat-accuracy">0%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secondary" style="flex: 1;" onclick="resetRound()">↺ Restart Round</button>
+                        <button class="btn-secondary" style="flex: 1; color: #ff4757; border-color: #ff4757;" onclick="fullReset()">⚠ Exit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Game Configuration & State
+         */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Dimensions & Scaling
+        let SCALE = 15; // Pixels per unit
+        let ORIGIN_X = 50;
+        let ORIGIN_Y = 50;
+        let X_MAX, Y_MAX;
+
+        // Game State
+        let players = [];
+        let playerNames = [];
+        let playerWins = [];
+        let numPlayers = 2;
+        let currentPlayerIdx = 0;
+        let isAnimating = false;
+        let inputMode = 'horizontal'; // 'horizontal' or 'vertical'
+        let shootDirection = 1; // 1 (Right/Up) or -1 (Left/Down)
+        
+        // Stats
+        let shotsFired = 0;
+        let hits = 0;
+
+        // Colors
+        const COLORS = ['#FFD700', '#00ff88', '#e94560', '#00ccff', '#ff9f43'];
+
+        // Entities
+        let explosions = [];
+        let activeProjectile = null; // { points: [], currentIdx: 0, color: '' }
+
+        /**
+         * Initialization & resizing
+         */
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            if (container) {
+                canvas.width = container.clientWidth;
+                canvas.height = Math.min(600, window.innerHeight * 0.6); // Responsive height
+                
+                // Recalculate Coordinate System
+                ORIGIN_X = 60; // Padding left
+                ORIGIN_Y = canvas.height - 60; // Padding bottom
+                X_MAX = (canvas.width - 100) / SCALE;
+                Y_MAX = (canvas.height - 100) / SCALE;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        /**
+         * Game Logic - Setup
+         */
+        function setupGame(n) {
+            numPlayers = n;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('nameScreen').style.display = 'flex';
+            
+            const nameContainer = document.getElementById('nameInputs');
+            nameContainer.innerHTML = '';
+            for(let i=0; i<n; i++) {
+                nameContainer.innerHTML += `
+                    <input type="text" id="pname${i}" placeholder="Player ${i+1} Name" value="Player ${i+1}" 
+                    style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid #444; color:#fff; border-radius:5px;">
+                `;
+            }
+        }
+
+        function backToStart() {
+            document.getElementById('nameScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        function startGame() {
+            playerNames = [];
+            playerWins = [];
+            for(let i=0; i<numPlayers; i++) {
+                const name = document.getElementById(`pname${i}`).value || `Player ${i+1}`;
+                playerNames.push(name);
+                playerWins.push(0);
+            }
+            
+            document.getElementById('nameScreen').style.display = 'none';
+            document.getElementById('gameWrapper').style.display = 'flex';
+            
+            resizeCanvas();
+            resetRound(true);
+            updateScoreboard();
+            
+            // Start Loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        function fullReset() {
+            document.getElementById('gameWrapper').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            isAnimating = false;
+        }
+
+        function resetRound(isNewGame = false) {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            // Spawn Players
+            players = [];
+            shotsFired = 0;
+            hits = 0;
+            explosions = [];
+            activeProjectile = null;
+            isAnimating = false;
+            
+            // Safe spawn logic
+            const minDist = 15; // Increased min distance
+            for(let i=0; i<numPlayers; i++) {
+                let px, py, valid;
+                let attempts = 0;
+                do {
+                    px = Math.random() * (X_MAX - 10) + 5;
+                    py = Math.random() * (Y_MAX - 10) + 5;
+                    valid = true;
+                    for(let p of players) {
+                        const d = Math.sqrt((px - p.x)**2 + (py - p.y)**2);
+                        if(d < minDist) valid = false;
+                    }
+                    attempts++;
+                } while(!valid && attempts < 100);
+
+                players.push({
+                    x: px, y: py,
+                    id: i,
+                    name: playerNames[i],
+                    color: COLORS[i % COLORS.length],
+                    alive: true,
+                    radius: 0.8
+                });
+            }
+
+            currentPlayerIdx = 0;
+            updateUI();
+            updateTurnIndicator();
+            setMode('horizontal'); // Reset mode
+            document.getElementById('fireBtn').disabled = false;
+        }
+
+        /**
+         * Core Mechanics - Input & Math
+         */
+        function setMode(mode) {
+            inputMode = mode;
+            const label = document.getElementById('funcLabel');
+            const input = document.getElementById('funcInput');
+            const hBtn = document.getElementById('mode-h');
+            const vBtn = document.getElementById('mode-v');
+            const dirPlus = document.getElementById('dir-plus');
+            const dirMinus = document.getElementById('dir-minus');
+
+            if(mode === 'horizontal') {
+                label.innerText = 'y =';
+                input.placeholder = "-0.1*x^2 + 2*x";
+                hBtn.classList.add('active');
+                vBtn.classList.remove('active');
+                dirPlus.innerText = "ขวา (+)";
+                dirMinus.innerText = "ซ้าย (-)";
+                if(!input.value.includes('x')) input.value = '';
+            } else {
+                label.innerText = 'x =';
+                input.placeholder = "sin(y/2)*5";
+                hBtn.classList.remove('active');
+                vBtn.classList.add('active');
+                dirPlus.innerText = "ขึ้น (+)";
+                dirMinus.innerText = "ลง (-)";
+                if(!input.value.includes('y')) input.value = '';
+            }
+        }
+
+        function setDirection(dir) {
+            shootDirection = dir;
+            document.getElementById('dir-plus').classList.toggle('active', dir === 1);
+            document.getElementById('dir-minus').classList.toggle('active', dir === -1);
+        }
+
+        function usePreset(type) {
+            const input = document.getElementById('funcInput');
+            // Simplified presets relative to player
+            if(inputMode === 'horizontal') {
+                if(type === 'parabola') input.value = "-0.1*x^2 + 3*x";
+                if(type === 'sine') input.value = "sin(x)*3";
+                if(type === 'line') input.value = "0.5*x";
+            } else {
+                if(type === 'parabola') input.value = "-0.1*y^2 + 3*y";
+                if(type === 'sine') input.value = "sin(y)*3";
+                if(type === 'line') input.value = "0.5*y";
+            }
+        }
+
+        function parseMath(str, variable) {
+            str = str.replace(/\^/g, '**');
+            if(/[{};]/.test(str)) throw new Error("Invalid characters");
+
+            const f = new Function(variable, `
+                with (Math) {
+                    try { return ${str}; } catch(e) { return NaN; }
+                }
+            `);
+            return f;
+        }
+
+        function fire() {
+            if(isAnimating) return;
+            
+            const rawInput = document.getElementById('funcInput').value.trim();
+            const errSpan = document.getElementById('errorMsg');
+            errSpan.innerText = "";
+
+            if(!rawInput) {
+                errSpan.innerText = "Please enter a function!";
+                return;
+            }
+
+            const shooter = players[currentPlayerIdx];
+            // In relative mode, the variable in formula always represents "distance from player"
+            const variable = inputMode === 'horizontal' ? 'x' : 'y';
+            
+            let func;
+            try {
+                func = parseMath(rawInput, variable);
+            } catch(e) {
+                errSpan.innerText = "Syntax Error";
+                return;
+            }
+
+            // Calculate Trajectory - Relative to Shooter
+            const points = [];
+            const step = 0.1;
+            const maxRange = Math.max(X_MAX, Y_MAX) * 1.5; // Enough to cover screen
+
+            // Loop distance from 0 (at player) outwards
+            for(let dist = 0; dist <= maxRange; dist += step) {
+                const val = func(dist);
+                if(!isFinite(val)) continue;
+
+                let gx, gy;
+                
+                if(inputMode === 'horizontal') {
+                    // x is distance (Horizontal)
+                    // y is value (Vertical offset)
+                    gx = shooter.x + (dist * shootDirection);
+                    gy = shooter.y + val;
+                } else {
+                    // y is distance (Vertical)
+                    // x is value (Horizontal offset)
+                    gy = shooter.y + (dist * shootDirection);
+                    gx = shooter.x + val;
+                }
+
+                // Optimization: Stop if way off screen
+                if(gx < -10 || gx > X_MAX + 10 || gy < -10 || gy > Y_MAX + 10) {
+                     if(points.length > 50) break; // Allow some buffer
+                }
+
+                points.push({x: gx, y: gy});
+            }
+
+            if(points.length === 0) {
+                 errSpan.innerText = "Function produced no valid points.";
+                 return;
+            }
+
+            // Start Animation
+            shotsFired++;
+            isAnimating = true;
+            document.getElementById('fireBtn').disabled = true;
+            
+            activeProjectile = {
+                points: points,
+                currentIdx: 0,
+                color: shooter.color
+            };
+            
+            updateUI();
+        }
+
+        /**
+         * Game Loop & Rendering
+         */
+        function gameLoop() {
+            // Clear
+            ctx.fillStyle = '#0f1219'; // Match CSS bg
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Grid
+            drawGrid();
+
+            // Draw Players
+            for(let p of players) {
+                if(!p.alive) continue;
+                
+                const sx = ORIGIN_X + p.x * SCALE;
+                const sy = ORIGIN_Y - p.y * SCALE;
+                
+                // Glow effect for active player
+                if(p.id === currentPlayerIdx && !activeProjectile) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = p.color;
+                    
+                    // Arrow indicator
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 25);
+                    ctx.lineTo(sx - 5, sy - 35);
+                    ctx.lineTo(sx + 5, sy - 35);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Body
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(sx, sy, p.radius * SCALE, 0, Math.PI*2);
+                ctx.fill();
+                
+                // Name label
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Kanit';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name, sx, sy - 15);
+            }
+
+            // Update & Draw Projectile
+            if(activeProjectile) {
+                const speed = 5; // Faster speed
+                activeProjectile.currentIdx = Math.min(activeProjectile.points.length, activeProjectile.currentIdx + speed);
+                
+                ctx.strokeStyle = activeProjectile.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for(let i=0; i<activeProjectile.currentIdx; i++) {
+                    const pt = activeProjectile.points[i];
+                    const sx = ORIGIN_X + pt.x * SCALE;
+                    const sy = ORIGIN_Y - pt.y * SCALE;
+                    
+                    if(i===0) ctx.moveTo(sx, sy);
+                    else ctx.lineTo(sx, sy);
+
+                    // Check Collision logic only at the tip
+                    if(i >= activeProjectile.currentIdx - speed) {
+                         if(checkCollision(pt.x, pt.y)) break; // Stop loop if hit
+                    }
+                }
+                ctx.stroke();
+
+                // Draw Head (Safety checked)
+                if(activeProjectile && activeProjectile.currentIdx > 0 && activeProjectile.currentIdx < activeProjectile.points.length) {
+                   const headIndex = Math.floor(activeProjectile.currentIdx) - 1;
+                   const head = activeProjectile.points[headIndex];
+                   if(head) {
+                       const hx = ORIGIN_X + head.x * SCALE;
+                       const hy = ORIGIN_Y - head.y * SCALE;
+                       ctx.fillStyle = '#fff';
+                       ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI*2); ctx.fill();
+                   }
+                }
+                
+                // End animation check
+                if(activeProjectile && activeProjectile.currentIdx >= activeProjectile.points.length) {
+                    endTurn();
+                }
+            }
+
+            // Update & Draw Explosions
+            for(let i = explosions.length - 1; i >= 0; i--) {
+                let exp = explosions[i];
+                exp.life -= 0.05;
+                if(exp.life <= 0) {
+                    explosions.splice(i, 1);
+                    continue;
+                }
+                
+                for(let part of exp.particles) {
+                    part.x += part.vx;
+                    part.y += part.vy;
+                    
+                    const sx = ORIGIN_X + part.x * SCALE;
+                    const sy = ORIGIN_Y - part.y * SCALE;
+                    
+                    ctx.fillStyle = `rgba(255, 100, 100, ${exp.life})`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, part.size, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            if(document.getElementById('gameWrapper').style.display !== 'none') {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#1e2736';
+            ctx.lineWidth = 1;
+            
+            // Vertical Lines
+            for(let x=0; x<=X_MAX; x+=1) {
+                const sx = ORIGIN_X + x*SCALE;
+                ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, canvas.height); ctx.stroke();
+                
+                if(x % 5 === 0) {
+                    ctx.fillStyle = '#445';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(x, sx+2, ORIGIN_Y + 12);
+                }
+            }
+            
+            // Horizontal Lines
+            for(let y=0; y<=Y_MAX; y+=1) {
+                const sy = ORIGIN_Y - y*SCALE;
+                ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(canvas.width, sy); ctx.stroke();
+                
+                if(y % 5 === 0 && y !== 0) {
+                    ctx.fillStyle = '#445';
+                    ctx.fillText(y, ORIGIN_X - 15, sy + 3);
+                }
+            }
+
+            // Axes
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(ORIGIN_X, 0); ctx.lineTo(ORIGIN_X, canvas.height); // Y axis
+            ctx.moveTo(0, ORIGIN_Y); ctx.lineTo(canvas.width, ORIGIN_Y); // X axis
+            ctx.stroke();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText("0", ORIGIN_X - 12, ORIGIN_Y + 15);
+            ctx.fillText("X", canvas.width - 15, ORIGIN_Y + 15);
+            ctx.fillText("Y", ORIGIN_X - 15, 15);
+        }
+
+        function checkCollision(gx, gy) {
+            // Collision Logic
+            // In relative mode, early points are near player. 
+            // Avoid suicide in the first few frames
+            const shooter = players[currentPlayerIdx];
+            const distFromShooter = Math.sqrt((gx - shooter.x)**2 + (gy - shooter.y)**2);
+            if(distFromShooter < 2.0) return false; 
+
+            for(let p of players) {
+                if(!p.alive) continue;
+                const dist = Math.sqrt((gx - p.x)**2 + (gy - p.y)**2);
+                if(dist < p.radius) {
+                    // HIT!
+                    p.alive = false;
+                    createExplosion(p.x, p.y);
+                    hits++;
+                    
+                    // Stop bullet immediately
+                    activeProjectile = null; 
+                    
+                    // Check Win Condition
+                    const survivors = players.filter(pl => pl.alive);
+                    if(survivors.length <= 1) {
+                        setTimeout(() => handleWin(survivors[0]), 1000);
+                    } else {
+                        endTurn();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function createExplosion(gx, gy) {
+            const parts = [];
+            for(let k=0; k<20; k++) {
+                parts.push({
+                    x: gx, y: gy,
+                    vx: (Math.random()-0.5)*0.5,
+                    vy: (Math.random()-0.5)*0.5,
+                    size: Math.random()*3 + 1
+                });
+            }
+            explosions.push({ life: 1.0, particles: parts });
+        }
+
+        function endTurn() {
+            if(isAnimating) {
+                activeProjectile = null; 
+                setTimeout(() => {
+                    let nextIdx = (currentPlayerIdx + 1) % numPlayers;
+                    let attempts = 0;
+                    while(!players[nextIdx].alive && attempts < numPlayers) {
+                        nextIdx = (nextIdx + 1) % numPlayers;
+                        attempts++;
+                    }
+                    
+                    currentPlayerIdx = nextIdx;
+                    isAnimating = false;
+                    updateTurnIndicator();
+                    document.getElementById('fireBtn').disabled = false;
+                    
+                    // UX: Reset focus
+                    document.getElementById('funcInput').focus();
+                }, 500);
+            }
+        }
+
+        function handleWin(winner) {
+            const gameOver = document.getElementById('gameOverScreen');
+            const title = document.getElementById('winnerTitle');
+            const sub = document.getElementById('winnerSubtitle');
+            
+            if(winner) {
+                title.innerHTML = `<span style="color:${winner.color}">🏆 ${winner.name} WINS!</span>`;
+                sub.innerText = "Master of Mathematics!";
+                playerWins[winner.id]++;
+            } else {
+                title.innerText = "DRAW!";
+                sub.innerText = "Everyone exploded.";
+            }
+
+            const acc = shotsFired > 0 ? Math.round((hits/shotsFired)*100) : 0;
+            document.getElementById('roundStats').innerHTML = `
+                <p>Total Shots: ${shotsFired}</p>
+                <p>Accuracy: ${acc}%</p>
+            `;
+            
+            updateScoreboard();
+            gameOver.style.display = 'flex';
+        }
+
+        /**
+         * UI Updates
+         */
+        function updateTurnIndicator() {
+            const p = players[currentPlayerIdx];
+            const div = document.getElementById('turnIndicator');
+            if(p) {
+                div.innerHTML = `Current Turn: <span style="color:${p.color}; font-size:1.3rem;">${p.name}</span>`;
+                div.style.backgroundColor = `${p.color}11`;
+                div.style.borderColor = `${p.color}33`;
+            }
+        }
+
+        function updateScoreboard() {
+            const sb = document.getElementById('scoreboard');
+            sb.innerHTML = playerNames.map((n, i) => 
+                `<span class="score-item">${n}: <strong>${playerWins[i]}</strong></span>`
+            ).join(' | ');
+        }
+
+        function updateUI() {
+            const aliveCount = players.filter(p => p.alive).length;
+            document.getElementById('stat-players').innerText = aliveCount;
+            const acc = shotsFired > 0 ? Math.round((hits/shotsFired)*100) : 0;
+            document.getElementById('stat-accuracy').innerText = acc + "%";
+        }
+
+        document.getElementById('funcInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter' && !document.getElementById('fireBtn').disabled) {
+                fire();
+            }
+        });
+
+    </script>
+</body>
+</html>
